@@ -4,19 +4,16 @@ package by.javaguru.je.jdbc;
 import by.javaguru.je.jdbc.utils.ConnectionManager;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class JdbcRunner {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args){
 
-
+        //Проверка работы пулла и возвращение свободного соединения путем создания пулла потоков
         ExecutorService service = Executors.newFixedThreadPool(5);
         Runnable task = () -> {
             try (Connection db = ConnectionManager.get()) {
@@ -24,7 +21,6 @@ public class JdbcRunner {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-
         };
         for (int i = 0; i < 4; i++) {
             service.execute(task);
