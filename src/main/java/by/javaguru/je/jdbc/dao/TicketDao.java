@@ -179,16 +179,6 @@ public class TicketDao implements Dao<Long, Ticket> {
     }
 
     private Ticket buildTicket(ResultSet resultSet) throws SQLException {
-        Flight flight = new Flight(
-                resultSet.getLong("id"),
-                resultSet.getLong("flight_no"),
-                resultSet.getTimestamp("departure_date").toLocalDateTime(),
-                resultSet.getLong("departure_airport_code"),
-                resultSet.getTimestamp("arrival_date").toLocalDateTime(),
-                resultSet.getLong("arrival_airport_code"),
-                resultSet.getLong("aircraft_id"),
-                FlightStatus.valueOf(resultSet.getString("status")));
-
         return new Ticket(
                 resultSet.getLong("id"),
                 resultSet.getLong("passport_no"),
