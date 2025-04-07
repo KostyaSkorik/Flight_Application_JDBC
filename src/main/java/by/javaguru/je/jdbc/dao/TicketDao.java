@@ -1,5 +1,8 @@
 package by.javaguru.je.jdbc.dao;
 
+import by.javaguru.je.jdbc.dto.TicketFilter;
+import by.javaguru.je.jdbc.entity.Flight;
+import by.javaguru.je.jdbc.entity.FlightStatus;
 import by.javaguru.je.jdbc.entity.Ticket;
 import by.javaguru.je.jdbc.exceptions.DaoException;
 import by.javaguru.je.jdbc.utils.ConnectionManager;
@@ -11,10 +14,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-public class TicketDao {
+public class TicketDao implements Dao<Long, Ticket> {
 
     private final static TicketDao INSTANCE = new TicketDao();
+    private final static FlightDao flightDao = FlightDao.getInstance();
+
     private final static String SAVE_SQL = """
             INSERT INTO ticket (passport_no, passenger_name, flight_id, seat_no, cost)
             VALUES (?,?,?,?,?);
@@ -23,13 +29,15 @@ public class TicketDao {
             DELETE FROM ticket WHERE id = ?;
             """;
     private final static String FIND_ALL_SQL = """
-            SELECT id, passport_no, passenger_name, flight_id, seat_no, cost
-            FROM ticket
+            SELECT t.id, t.passport_no, t.passenger_name, t.flight_id, t.seat_no, t.cost,
+                   f.flight_no, f.departure_date,
+                   f.departure_airport_code, f.arrival_date,
+                   f.arrival_airport_code, f.aircraft_id, f.status
+            
+            FROM ticket t JOIN flight f ON t.flight_id = f.id
             """;
-    private final static String FIND_BY_ID_SQL = """
-            SELECT id, passport_no, passenger_name, flight_id, seat_no, cost
-            FROM ticket
-            WHERE id = ?;
+    private final static String FIND_BY_ID_SQL = FIND_ALL_SQL+ """
+            WHERE t.id = ?;
             """;
     private final static String UPDATE_SQL = """
             UPDATE ticket
@@ -41,15 +49,11 @@ public class TicketDao {
             WHERE id = ?;
             """;
 
-
+    @Override
     public Ticket save(Ticket ticket) {
         try (Connection db = ConnectionManager.get();
              PreparedStatement statement = db.prepareStatement(SAVE_SQL, PreparedStatement.RETURN_GENERATED_KEYS)) {
-            statement.setLong(1, ticket.getPassportNo());
-            statement.setString(2, ticket.getPassengerName());
-            statement.setLong(3, ticket.getFlightId());
-            statement.setLong(4, ticket.getSeatNo());
-            statement.setBigDecimal(5, ticket.getCost());
+            SetStatementForTicketWithoutId(ticket, statement);
             statement.executeUpdate();
             ResultSet resultSetKeys = statement.getGeneratedKeys();
             while (resultSetKeys.next()) {
@@ -61,6 +65,15 @@ public class TicketDao {
         }
     }
 
+    private static void SetStatementForTicketWithoutId(Ticket ticket, PreparedStatement statement) throws SQLException {
+        statement.setLong(1, ticket.getPassportNo());
+        statement.setString(2, ticket.getPassengerName());
+        statement.setLong(3, ticket.getFlight().getId());
+        statement.setLong(4, ticket.getSeatNo());
+        statement.setBigDecimal(5, ticket.getCost());
+    }
+
+    @Override
     public boolean delete(Long id) {
         try (Connection db = ConnectionManager.get();
              PreparedStatement statement = db.prepareStatement(DELETE_SQL)) {
@@ -71,6 +84,7 @@ public class TicketDao {
         }
     }
 
+    @Override
     public List<Ticket> findAll() {
         List<Ticket> tickets = new ArrayList<>();
         try (Connection db = ConnectionManager.get();
@@ -84,7 +98,46 @@ public class TicketDao {
             throw new DaoException(e);
         }
     }
-    //Возращает опциональное значение билета с заданным ID, если найден, иначе возвращает пустой опциональ. Optional
+
+    public List<Ticket> findAll(TicketFilter filter) {
+        List<Object> parameters = new ArrayList<>();
+        List<String> whereSql = new ArrayList<>();
+
+        if (filter.getPassengerName() != null) {
+            parameters.add(filter.getPassengerName());
+            whereSql.add("passenger_name = ?");
+        }
+        if (filter.getSeatNo() != null) {
+            parameters.add("%" + filter.getSeatNo() + "%");
+            whereSql.add("seat_no LIKE ?");
+        }
+        parameters.add(filter.getLimit());
+        parameters.add(filter.getOffset());
+        String filteredSql = whereSql.stream().collect(Collectors.joining(
+                " AND ",
+                parameters.size() > 2 ? " WHERE " : " ",
+                " LIMIT ? OFFSET ?"
+        ));
+
+
+        try (Connection db = ConnectionManager.get();
+             PreparedStatement statement = db.prepareStatement(FIND_ALL_SQL + filteredSql)) {
+            List<Ticket> tickets = new ArrayList<>();
+
+            for (int i = 0; i < parameters.size(); i++) {
+                statement.setObject(i + 1, parameters.get(i));
+            }
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                tickets.add(buildTicket(resultSet));
+            }
+            return tickets;
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
+    }
+
+    //Возвращает опциональное значение билета с заданным ID, если найден, иначе возвращает пустой опциональ. Optional
     //- обертка над возможным отсутствием значения. Если значение есть, то методом get() можно получить его значение.
     //Это удобно, потому что в некоторых ситуациях метод может не находить значение и возвращать null.
     //И это может привести к ошибке при использовании этого значения.
@@ -107,12 +160,8 @@ public class TicketDao {
     public boolean update(Ticket ticket) {
         try (Connection db = ConnectionManager.get();
              PreparedStatement statement = db.prepareStatement(UPDATE_SQL)) {
-            statement.setLong(1,ticket.getPassportNo());
-            statement.setString(2,ticket.getPassengerName());
-            statement.setLong(3,ticket.getFlightId());
-            statement.setLong(4,ticket.getSeatNo());
-            statement.setBigDecimal(5,ticket.getCost());
-            statement.setLong(6,ticket.getId());
+            SetStatementForTicketWithoutId(ticket, statement);
+            statement.setLong(6, ticket.getId());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DaoException(e);
@@ -130,11 +179,22 @@ public class TicketDao {
     }
 
     private Ticket buildTicket(ResultSet resultSet) throws SQLException {
+        Flight flight = new Flight(
+                resultSet.getLong("id"),
+                resultSet.getLong("flight_no"),
+                resultSet.getTimestamp("departure_date").toLocalDateTime(),
+                resultSet.getLong("departure_airport_code"),
+                resultSet.getTimestamp("arrival_date").toLocalDateTime(),
+                resultSet.getLong("arrival_airport_code"),
+                resultSet.getLong("aircraft_id"),
+                FlightStatus.valueOf(resultSet.getString("status")));
+
         return new Ticket(
                 resultSet.getLong("id"),
                 resultSet.getLong("passport_no"),
                 resultSet.getString("passenger_name"),
-                resultSet.getLong("flight_id"),
+                flightDao.findById(resultSet.getLong("flight_id"),resultSet.getStatement().getConnection())
+                        .orElse(null),
                 resultSet.getLong("seat_no"),
                 resultSet.getBigDecimal("cost"));
     }
