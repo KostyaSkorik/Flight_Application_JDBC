@@ -124,9 +124,9 @@ public class FlightDao implements Dao<Long, Flight> {
     private void SetStatementForFlightWithoutId(Flight flight, PreparedStatement preparedStatement) throws SQLException {
         preparedStatement.setLong(1, flight.getFlightNo());
         preparedStatement.setTimestamp(2, Timestamp.valueOf(flight.getDepartureDate()));
-        preparedStatement.setLong(3, flight.getDepartureAirportCode());
+        preparedStatement.setString(3, flight.getDepartureAirportCode());
         preparedStatement.setTimestamp(4, Timestamp.valueOf(flight.getArrivalDate()));
-        preparedStatement.setLong(5, flight.getArrivalAirportCode());
+        preparedStatement.setString(5, flight.getArrivalAirportCode());
         preparedStatement.setLong(6, flight.getAircraftId());
         preparedStatement.setString(7, flight.getStatus().name());
     }
@@ -137,9 +137,9 @@ public class FlightDao implements Dao<Long, Flight> {
                 resultSet.getLong("id"),
                 resultSet.getLong("flight_no"),
                 resultSet.getTimestamp("departure_date").toLocalDateTime(),
-                resultSet.getLong("departure_airport_code"),
+                resultSet.getString("departure_airport_code"),
                 resultSet.getTimestamp("arrival_date").toLocalDateTime(),
-                resultSet.getLong("arrival_airport_code"),
+                resultSet.getString("arrival_airport_code"),
                 resultSet.getLong("aircraft_id"),
                 FlightStatus.valueOf(resultSet.getString("status")));
     }

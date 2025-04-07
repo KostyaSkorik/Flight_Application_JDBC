@@ -8,8 +8,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class TicketFilter {
-    private String passengerName;
-    private String seatNo;
-    private int limit;
-    private int offset;
+    private final String passengerName;
+    private final String seatNo;
+    private final int limit;
+    private final int offset;
 }

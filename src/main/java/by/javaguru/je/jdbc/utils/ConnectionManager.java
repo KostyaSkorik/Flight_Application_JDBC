@@ -1,6 +1,5 @@
 package by.javaguru.je.jdbc.utils;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -28,7 +27,16 @@ public final class ConnectionManager {
 
     //выполняется 1 раз при запуске класса
     static {
+        loadDriver();
         initConnectionPool();
+    }
+
+    private static void loadDriver() {
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -44,7 +52,7 @@ public final class ConnectionManager {
         for(int i = 0; i < size; i++){
             Connection connection = open();
             ClassLoader loader = ConnectionManager.class.getClassLoader();
-            Class[] interfaces = connection.getClass().getInterfaces();
+            Class<?>[] interfaces = connection.getClass().getInterfaces();
             Connection proxyConnection = (Connection) Proxy.newProxyInstance(loader,interfaces,
                     ((proxy, method, args) -> {
                         if(method.getName().equals("close")){

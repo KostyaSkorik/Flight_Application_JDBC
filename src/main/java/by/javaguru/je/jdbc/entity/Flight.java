@@ -15,9 +15,9 @@ public class Flight {
     private Long id;
     private Long flightNo;
     private LocalDateTime departureDate;
-    private Long departureAirportCode;
+    private String departureAirportCode;
     private LocalDateTime arrivalDate;
-    private Long arrivalAirportCode;
+    private String arrivalAirportCode;
     private Long aircraftId;
     private FlightStatus status;
 
