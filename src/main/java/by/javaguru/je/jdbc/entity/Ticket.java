@@ -16,7 +16,7 @@ public class Ticket {
     private Long passportNo;
     private String passengerName;
     private Flight flight;
-    private Long seatNo;
+    private String seatNo;
     private BigDecimal cost;
 
 }

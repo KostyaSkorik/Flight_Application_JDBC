@@ -40,8 +40,8 @@ public final class ConnectionManager {
     }
 
 
-    private static void  initConnectionPool(){
-        int size =  POOL_SIZE > 0 ? POOL_SIZE : DEFAULT_POOL_SIZE;
+    private static void initConnectionPool() {
+        int size = POOL_SIZE > 0 ? POOL_SIZE : DEFAULT_POOL_SIZE;
         pool = new ArrayBlockingQueue<>(size);
         /*
         Каждое реальное соединение требует свой прокси.
@@ -49,29 +49,20 @@ public final class ConnectionManager {
         все они будут ссылаться на одно и то же соединение,
         что приведет к ошибкам.
          */
-        for(int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             Connection connection = open();
             ClassLoader loader = ConnectionManager.class.getClassLoader();
-            Class<?>[] interfaces = connection.getClass().getInterfaces();
-            Connection proxyConnection = (Connection) Proxy.newProxyInstance(loader,interfaces,
-                    ((proxy, method, args) -> {
-                        if(method.getName().equals("close")){
-                            //синхронизация для последовательного вывода
-                            synchronized (monitor){
-                                pool.put((Connection) proxy);
-                                System.out.println("Return connection to pool from: " + Thread.currentThread().getName() +
-                                                   " size pool: " + pool.size());
+            Class<?>[] interfaces = {Connection.class};
+            Connection proxyConnection = (Connection) Proxy.newProxyInstance(loader, interfaces,
+                    ((proxy, method, args) ->
+                        method.getName().equals("close")? pool.add((Connection) proxy):
+                                method.invoke(connection, args)));
 
-                            }
-                        }
-                        //Вызов всех методов кроме close
-                        return method.invoke(connection,args);
-                    }));
             pool.add(proxyConnection);
         }
     }
 
-    public static Connection get(){
+    public static Connection get() {
         try {
             return pool.take();
         } catch (InterruptedException e) {
@@ -80,15 +71,15 @@ public final class ConnectionManager {
     }
 
 
-    private static Connection open(){
+    private static Connection open() {
         try {
-            return DriverManager.getConnection(URL,USER,PASSWORD);
+            return DriverManager.getConnection(URL, USER, PASSWORD);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private ConnectionManager(){
+    private ConnectionManager() {
 
     }
 }

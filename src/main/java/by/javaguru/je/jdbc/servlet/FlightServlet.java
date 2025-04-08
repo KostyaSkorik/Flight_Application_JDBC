@@ -1,6 +1,8 @@
 package by.javaguru.je.jdbc.servlet;
 
 import by.javaguru.je.jdbc.service.FlightService;
+import by.javaguru.je.jdbc.utils.JSPHelper;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,21 +18,11 @@ public class FlightServlet extends HttpServlet {
     private static final FlightService flightService = FlightService.getInstance();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         resp.setContentType("text/html");
         resp.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        req.setAttribute("flights", flightService.findAll());
+        req.getRequestDispatcher(JSPHelper.getPath("flights")).forward(req,resp);
 
-        try (PrintWriter writer = resp.getWriter()) {
-            writer.println("<h1>Все перелеты</h1>");
-            writer.println("<ul>");
-            flightService.findAll().forEach(flightDto ->
-                    writer.println("""
-                            <li>
-                            <a href='/tickets?flightId=%d'>%s</a>
-                            </li>
-                            """.formatted(flightDto.getId(),flightDto.getDescription())));
-            writer.println("</ul>");
-            writer.flush();
-        }
     }
 }

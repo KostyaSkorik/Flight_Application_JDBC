@@ -16,7 +16,7 @@ public class FlightService {
 
     public List<FlightDto> findAll() {
         return flightDao.findAll().stream().map(flight -> new FlightDto(flight.getId(), """
-                %s - %s -  %s
+                %s - %s - %s
                 """.formatted(flight.getDepartureAirportCode(), flight.getArrivalAirportCode(), flight.getStatus()))).
                 collect(Collectors.toList());
     }

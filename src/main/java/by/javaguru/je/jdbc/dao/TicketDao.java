@@ -36,8 +36,11 @@ public class TicketDao implements Dao<Long, Ticket> {
             
             FROM ticket t JOIN flight f ON t.flight_id = f.id
             """;
-    private final static String FIND_BY_ID_SQL = FIND_ALL_SQL+ """
+    private final static String FIND_BY_ID_SQL = FIND_ALL_SQL + """
             WHERE t.id = ?;
+            """;
+    private final static String FIND_BY_FLIGHT_ID = FIND_ALL_SQL + """
+            WHERE t.flight_id = ?
             """;
     private final static String UPDATE_SQL = """
             UPDATE ticket
@@ -69,7 +72,7 @@ public class TicketDao implements Dao<Long, Ticket> {
         statement.setLong(1, ticket.getPassportNo());
         statement.setString(2, ticket.getPassengerName());
         statement.setLong(3, ticket.getFlight().getId());
-        statement.setLong(4, ticket.getSeatNo());
+        statement.setString(4, ticket.getSeatNo());
         statement.setBigDecimal(5, ticket.getCost());
     }
 
@@ -91,7 +94,7 @@ public class TicketDao implements Dao<Long, Ticket> {
              PreparedStatement statement = db.prepareStatement(FIND_ALL_SQL)) {
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                tickets.add(buildTicket(resultSet));
+                tickets.add(buildTicket(resultSet,db));
             }
             return tickets;
         } catch (SQLException e) {
@@ -129,11 +132,26 @@ public class TicketDao implements Dao<Long, Ticket> {
             }
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                tickets.add(buildTicket(resultSet));
+                tickets.add(buildTicket(resultSet,db));
             }
             return tickets;
         } catch (SQLException e) {
             throw new DaoException(e);
+        }
+    }
+
+    public List<Ticket> findAllByFlightId(Long flightId) {
+        List<Ticket> tickets = new ArrayList<>();
+        try (Connection db = ConnectionManager.get();
+             PreparedStatement statement = db.prepareStatement(FIND_BY_FLIGHT_ID)) {
+            statement.setLong(1,flightId);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()){
+                tickets.add(buildTicket(resultSet,db));
+            }
+            return tickets;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -148,7 +166,7 @@ public class TicketDao implements Dao<Long, Ticket> {
             statement.setLong(1, id);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                findTicket = buildTicket(resultSet);
+                findTicket = buildTicket(resultSet,db);
             }
 
             return Optional.ofNullable(findTicket);
@@ -178,14 +196,14 @@ public class TicketDao implements Dao<Long, Ticket> {
 
     }
 
-    private Ticket buildTicket(ResultSet resultSet) throws SQLException {
+    private Ticket buildTicket(ResultSet resultSet,Connection db) throws SQLException {
         return new Ticket(
                 resultSet.getLong("id"),
                 resultSet.getLong("passport_no"),
                 resultSet.getString("passenger_name"),
-                flightDao.findById(resultSet.getLong("flight_id"),resultSet.getStatement().getConnection())
+                flightDao.findById(resultSet.getLong("flight_id"), db)
                         .orElse(null),
-                resultSet.getLong("seat_no"),
+                resultSet.getString("seat_no"),
                 resultSet.getBigDecimal("cost"));
     }
 }
