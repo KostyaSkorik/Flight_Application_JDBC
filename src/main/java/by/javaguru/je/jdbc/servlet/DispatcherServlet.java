@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 @WebServlet("/dispatcher")
 public class DispatcherServlet extends HttpServlet {
@@ -32,7 +31,6 @@ public class DispatcherServlet extends HttpServlet {
      */
     public void includeTravel(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("text/html");
-        resp.setCharacterEncoding(StandardCharsets.UTF_8.name());
         var dispatcher = req.getRequestDispatcher("/flights");
         dispatcher.include(req,resp);
         //ничего не напишется, так как writer будет закрыт во flightServlet

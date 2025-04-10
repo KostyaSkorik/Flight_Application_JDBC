@@ -1,5 +1,7 @@
 package by.javaguru.je.jdbc.dao;
 
+import by.javaguru.je.jdbc.entity.Gender;
+import by.javaguru.je.jdbc.entity.Role;
 import by.javaguru.je.jdbc.entity.User;
 import by.javaguru.je.jdbc.utils.ConnectionManager;
 import lombok.AccessLevel;
@@ -17,6 +19,9 @@ public class UserDao implements Dao<Long, User> {
 
     private static final String SAVE_SQL = """
             INSERT INTO users (name, birthday, email, password, role, gender) VALUES (?,?,?,?,?,?)
+            """;
+    private static final String FIND_BY_EMAIL_AND_PASSWORD = """
+            SELECT * FROM users WHERE email=? AND password=?;
             """;
 
     @Override
@@ -63,5 +68,33 @@ public class UserDao implements Dao<Long, User> {
 
     public static UserDao getInstance() {
         return INSTANCE;
+    }
+
+    public Optional<User> findByEmailAndPassword(String email, String pwd) {
+        User user = null;
+        try (Connection db = ConnectionManager.get();
+             PreparedStatement statement = db.prepareStatement(FIND_BY_EMAIL_AND_PASSWORD)) {
+            statement.setString(1,email);
+            statement.setString(2,pwd);
+            ResultSet resultSet = statement.executeQuery();
+            if(resultSet.next()){
+                user = buildEntity(resultSet);
+            }
+            return Optional.ofNullable(user);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private User buildEntity(ResultSet resultSet) throws SQLException {
+        return User.builder()
+                .id(resultSet.getObject("id",Integer.class))
+                .name(resultSet.getObject("name",String.class))
+                .birthday(resultSet.getObject("birthday",Date.class).toLocalDate())
+                .email(resultSet.getObject("email",String.class))
+                .password(resultSet.getObject("password",String.class))
+                .role(Role.valueOf(resultSet.getObject("role",String.class)))
+                .gender(Gender.valueOf(resultSet.getObject("gender",String.class)))
+                .build();
     }
 }
