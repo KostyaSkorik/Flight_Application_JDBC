@@ -27,15 +27,23 @@
         <input type="password" name="pwd" id="pwd">
     </label><br/>
     <label>
-        <c:forEach var="role" items="${requestScope.roles}">
-            <input type="radio" name="role" value="${role}">${role}<br>
-        </c:forEach>
+        <select name="role">
+            <option value="">--Please choose role-</option>
+            <c:forEach var="role" items="${requestScope.roles}">
+                <option value="${role}">${role}</option>
+                <br>
+            </c:forEach>
+        </select>
     </label><br/>
     <label>
-        <c:forEach var="gender" items="${requestScope.genders}">
-            <input type="radio" name="gender" VALUE="${gender}">${gender}<br>
-        </c:forEach>
-    </label>
+        <select name="gender">
+            <option value="">--Please choose gender--</option>
+            <c:forEach var="gender" items="${requestScope.genders}">
+                <option value="${gender}">${gender}</option>
+                <br>
+            </c:forEach>
+        </select>
+    </label><br/>
     <input type="submit" value="Send">
 </form>
 <c:if test="${not empty requestScope.errors}">
