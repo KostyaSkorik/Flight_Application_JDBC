@@ -12,7 +12,9 @@ import lombok.SneakyThrows;
 
 import java.io.IOException;
 
-@WebServlet("/login")
+import static by.javaguru.je.jdbc.utils.UrlPath.LOGIN;
+
+@WebServlet(LOGIN)
 public class LoginServlet extends HttpServlet {
     UserService userService = UserService.getInstance();
 
@@ -22,7 +24,7 @@ public class LoginServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
         userService.login(req.getParameter("email"), req.getParameter("pwd"))
                 .ifPresentOrElse(userDto -> onLoginSuccess(userDto, req, resp), () -> onLoginFail(req, resp));
     }

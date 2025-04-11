@@ -21,5 +21,6 @@
     </li>
   </c:forEach>
 </ul>
+<%@include file="header.jsp"%>
 </body>
 </html>

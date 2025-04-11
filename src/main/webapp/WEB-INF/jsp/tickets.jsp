@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8"%>
 <%--
   Created by IntelliJ IDEA.
   User: kostya-skorik
@@ -31,5 +31,6 @@
     </c:if>
 
 </ul>
+<%@include file="header.jsp"%>
 </body>
 </html>

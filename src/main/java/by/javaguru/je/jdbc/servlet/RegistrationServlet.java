@@ -14,7 +14,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-@WebServlet("/registration")
+import static by.javaguru.je.jdbc.utils.UrlPath.REGISTRATION;
+
+@WebServlet(REGISTRATION)
 public class RegistrationServlet extends HttpServlet {
     private final UserService userService = UserService.getInstance();
     @Override
@@ -26,6 +28,8 @@ public class RegistrationServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setAttribute("roles", Role.values());
+        req.setAttribute("genders", Gender.values());
         CreateUserDto userDto = CreateUserDto.builder()
                 .name(req.getParameter("name"))
                 .birthday(req.getParameter("birthday"))
@@ -35,12 +39,10 @@ public class RegistrationServlet extends HttpServlet {
                 .gender(req.getParameter("gender")==null ? "":req.getParameter("gender"))
                 .build();
         try {
-            Integer id = userService.createUser(userDto);
-            resp.sendRedirect("/login?userId=%d".formatted(id));
+            userService.createUser(userDto);
+            resp.sendRedirect("/login");
         }catch (ValidationException e){
             req.setAttribute("errors", e.getErrors());
-            req.setAttribute("roles", Role.values());
-            req.setAttribute("genders", Gender.values());
             req.getRequestDispatcher(JSPHelper.getPath("registration")).forward(req,resp);
         }
 
