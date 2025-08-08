@@ -33,3 +33,11 @@ Flight Application - это небольшое веб приложение
 - Ручной настройки Tomcat(version - 10.1.39)
 - JSP и HTML
 - MVC Паттерна
+
+### Структура бд
+
+<img src="src/pages/dbDiagrams.png">
+
+### Использование приложения
+- Запуск Tomcat сервера
+- начало работы по ссылке http://localhost:8080/registration
