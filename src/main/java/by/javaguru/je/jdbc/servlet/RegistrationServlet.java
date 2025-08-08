@@ -6,6 +6,7 @@ import by.javaguru.je.jdbc.entity.Role;
 import by.javaguru.je.jdbc.exceptions.ValidationException;
 import by.javaguru.je.jdbc.service.UserService;
 import by.javaguru.je.jdbc.utils.JSPHelper;
+import by.javaguru.je.jdbc.utils.UrlPath;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,9 +15,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-import static by.javaguru.je.jdbc.utils.UrlPath.REGISTRATION;
 
-@WebServlet(REGISTRATION)
+@WebServlet(UrlPath.REGISTRATION)
 public class RegistrationServlet extends HttpServlet {
     private final UserService userService = UserService.getInstance();
     @Override

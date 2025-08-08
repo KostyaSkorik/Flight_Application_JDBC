@@ -1,5 +1,6 @@
 package by.javaguru.je.jdbc.filter;
 
+import by.javaguru.je.jdbc.utils.UrlPath;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,12 +9,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Set;
 
-import static by.javaguru.je.jdbc.utils.UrlPath.LOGIN;
-import static by.javaguru.je.jdbc.utils.UrlPath.REGISTRATION;
+
 
 @WebFilter("/*")
 public class AuthorizationFilter implements Filter {
-    private static final Set<String> PUBLIC_PATH = Set.of(LOGIN,REGISTRATION);
+    private static final Set<String> PUBLIC_PATH = Set.of(UrlPath.LOGIN,UrlPath.REGISTRATION);
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
@@ -21,7 +21,7 @@ public class AuthorizationFilter implements Filter {
         if(userIsAuthorized(servletRequest)||(isPublicPath(URI))){
             filterChain.doFilter(servletRequest,servletResponse);
         }else {
-            ((HttpServletResponse)servletResponse).sendRedirect(LOGIN);
+            ((HttpServletResponse)servletResponse).sendRedirect(UrlPath.LOGIN);
         }
     }
 

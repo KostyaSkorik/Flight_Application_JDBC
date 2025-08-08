@@ -3,6 +3,7 @@ package by.javaguru.je.jdbc.servlet;
 import by.javaguru.je.jdbc.dto.UserDto;
 import by.javaguru.je.jdbc.service.UserService;
 import by.javaguru.je.jdbc.utils.JSPHelper;
+import by.javaguru.je.jdbc.utils.UrlPath;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,9 +13,9 @@ import lombok.SneakyThrows;
 
 import java.io.IOException;
 
-import static by.javaguru.je.jdbc.utils.UrlPath.LOGIN;
 
-@WebServlet(LOGIN)
+
+@WebServlet(UrlPath.LOGIN)
 public class LoginServlet extends HttpServlet {
     UserService userService = UserService.getInstance();
 
